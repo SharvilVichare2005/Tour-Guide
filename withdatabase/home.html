@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalGuide - Home</title>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Dependencies -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="/js/env.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <h1 class="logo">LocalGuide</h1>
+      <nav class="nav">
+        <a href="home.html" class="nav-link active">Home</a>
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+      <a href="index.html" class="login-link">
+        <button class="btn-logout">Logout</button>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="container">
+      <div class="hero">
+        <h2 class="hero-title">Discover Amazing Places in India</h2>
+        <p class="hero-description">
+          LocalGuide helps you find the best attractions, restaurants, and hidden gems within 5km of your location.
+        </p>
+      </div>
+
+      <div class="content-grid">
+        <!-- Sidebar: Categories and Nearby Places -->
+        <div class="sidebar">
+          <div class="card">
+            <h3 class="card-title">Categories</h3>
+            <div class="categories-grid">
+              <button class="category-btn" data-category="restaurant">Restaurants</button>
+              <button class="category-btn" data-category="attraction">Attractions</button>
+              <button class="category-btn" data-category="temple">Temples</button>
+              <button class="category-btn" data-category="park">Parks</button>
+              <button class="category-btn" data-category="cafe">Cafes</button>
+              <button class="category-btn" data-category="shopping">Shopping</button>
+            </div>
+          </div>
+          
+          <div class="cards">
+            <h3 class="cards-title">Nearby Places</h3>
+            <div id="nearbyPlaces" class="nearby-places">
+              <!-- JS will fill this with tabs and places-list -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-container">
+          <div class="card map-card">
+            <div id="map" class="map">
+              <div class="loading">
+                <i data-lucide="loader-2" class="loading-icon"></i>
+                <span>Loading map...</span>
+              </div>
+            </div>
+            <div class="map-controls">
+              <button id="centerMapBtn" class="center-map-button">
+                <i data-lucide="map-pin" class="button-icon"></i>
+                Center Map
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Place Detail Modal -->
+  <div id="placeDetailModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-image-container">
+        <img id="modalImage" src="./images/placeholder.jpeg" alt="Place" class="modal-image">
+        <button class="modal-close close-modal">
+          <i data-lucide="x" class="close-icon"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class=" ">
+          <h3 id="modalTitle" class="modal-title">Place Name</h3>
+          <div class="modal-subtitle">
+            <div class="rating">
+              <i data-lucide="star" class="star-icon"></i>
+              <span id="modalRating">4.5</span>
+            </div>
+            <span id="modalType" class="place-type">Restaurant</span>
+          </div>
+        </div>
+        
+        <div class="modal-tabs">
+          <div class="tabs">
+            <button class="tab-trigger active" data-tab="info">Info</button>
+            <button class="tab-trigger" data-tab="photos">Photos</button>
+            <button class="tab-trigger" data-tab="map">Map</button>
+          </div>
+          
+          <div class="tab-content active" id="infoTab">
+            <p id="modalDescription" class="description">No description available.</p>
+            <div class="info-list">
+              <div class="info-item">
+                <i data-lucide="map-pin" class="info-icon"></i>
+                <span id="modalVicinity">Address</span>
+              </div>
+              <div id="hoursContainer" class="info-item">
+                <i data-lucide="clock" class="info-icon"></i>
+                <div id="modalHours" class="hours-list"></div>
+              </div>
+              <div id="phoneContainer" class="info-item">
+                <i data-lucide="phone" class="info-icon"></i>
+                <a id="modalPhone" href="tel:" class="info-link">Phone number</a>
+              </div>
+              <div id="websiteContainer" class="info-item">
+                <i data-lucide="globe" class="info-icon"></i>
+                <a id="modalWebsite" href="#" target="_blank" class="info-link">Website</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-content" id="photosTab">
+            <div id="modalPhotos" class="photos-grid"></div>
+          </div>
+          
+          <div class="tab-content" id="mapTab">
+            <div id="modalMapView" class="modal-map-view">
+              <!-- Small map will be inserted here -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="action-button primary" id="getDirectionsBtn">Get Directions</button>
+          <button class="action-button secondary" id="saveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/supabase.js"></script>
+  <script type="module" src="js/home.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Lucide icons
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

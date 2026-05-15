@@ -1,0 +1,175 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset="UTF-8"> 
+<title>Infosys New Employee Registration</title> 
+ 
+<style> 
+    /* Simplified CSS */
+    body {     
+        font-family: Arial, sans-serif;     
+        background-color: #ffffff; 
+        color: #333333;
+        margin: 20px;
+    } 
+     
+    .container {     
+        max-width: 600px;     
+        margin: 0 auto;     
+        padding: 20px;     
+        border: 1px solid #cccccc; 
+    } 
+     
+    h2 {     
+        text-align: center;     
+        border-bottom: 1px solid #eeeeee;
+        padding-bottom: 10px;
+    } 
+     
+    table {     
+        width: 100%;     
+    } 
+     
+    td {    
+        padding: 8px 0; 
+        vertical-align: top;
+    } 
+     
+    input[type="text"], 
+    input[type="email"], 
+    input[type="date"], 
+    textarea {     
+        width: 100%;     
+        padding: 6px;     
+        border: 1px solid #999999; 
+        box-sizing: border-box; /* Keeps inputs inside the table cells */
+    } 
+     
+    .gender input {     
+        width: auto; 
+    } 
+     
+    .buttons {     
+        text-align: center; 
+        padding-top: 15px;
+    } 
+     
+    button {     
+        padding: 8px 15px;     
+        border: 1px solid #333333;     
+        background-color: #eeeeee;
+        cursor: pointer;     
+        margin: 0 5px; 
+    } 
+
+    button:hover {
+        background-color: #dddddd;
+    }
+     
+    #msg { 
+        text-align: center;    
+        color: green;     
+        font-weight: bold;
+        margin-top: 15px;
+    } 
+</style> 
+ 
+<script> 
+/* Extra Function: Form Validation */ 
+function validateForm() {    
+    alert("Registration Successful!");    
+    document.getElementById("msg").innerHTML = "✅ Employee Registered Successfully";    
+    return false;   // demo purpose 
+} 
+</script> 
+ 
+</head> 
+ 
+<body> 
+ 
+<div class="container"> 
+ 
+<h2>New Employee Registration - Infosys</h2> 
+ 
+<form onsubmit="return validateForm()"> 
+ 
+<table> 
+ 
+<tr> 
+    <td>Full Name</td> 
+    <td> <input type="text" pattern="[A-Za-z ]+" title="Enter your full name" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Gender</td> 
+    <td class="gender"> 
+        <label><input type="radio" name="gender" required> Male</label> 
+        <label><input type="radio" name="gender"> Female</label> 
+    </td> 
+</tr> 
+ 
+<tr> 
+    <td>Aadhaar Number</td> 
+    <td> <input type="text" pattern="[0-9]{12}" maxlength="12" title="Enter 12 digit Aadhaar Number" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>PAN Number</td> 
+    <td> <input type="text" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="Enter PAN number (ABCDE1234F)" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Address</td> 
+    <td> <textarea rows="3" title="Enter full address with comma" required></textarea> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Pin Code</td> 
+    <td> <input type="text" pattern="[0-9]{6}" maxlength="6" title="Enter 6 digit Pin Code" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Phone Number</td>
+    <td> <input type="text" pattern="[0-9]{10}" maxlength="10" title="Enter 10 digit mobile number" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Email ID</td> 
+    <td> <input type="email" title="Enter valid email" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>University Name</td> 
+    <td> <input type="text" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Year of Graduation</td> 
+    <td> <input type="date" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Marks (SGPA/Percentage)</td> 
+    <td> <input type="text" title="Enter SGPA or Percentage" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td>Date of Birth</td> 
+    <td> <input type="date" required> </td> 
+</tr> 
+ 
+<tr> 
+    <td colspan="2" class="buttons"> 
+        <button type="submit">Register</button> 
+        <button type="reset">Reset</button> 
+    </td> 
+</tr> 
+ 
+</table> 
+ 
+</form> 
+ 
+<p id="msg"></p> 
+</div> 
+</body> 
+</html>

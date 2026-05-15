@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalGuide - About</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/about.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/js/env.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <h1 class="logo">LocalGuide</h1>
+      <nav class="nav">
+        <a href="home.html" class="nav-link">Home</a>
+        <a href="explore.html" class="nav-link">Explore</a>
+        <a href="about.html" class="nav-link active">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+      <a href="index.html" class="login-link">
+        <button class="btn-logout">Logout</button>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="container">
+      <div class="hero">
+        <h2 class="hero-title">About LocalGuide</h2>
+        <p class="hero-description">
+          Discover the story behind our mission to help you explore the world around you
+        </p>
+      </div>
+
+      <div class="about-section">
+        <div class="about-content">
+          <h3 class="section-title">Our Mission</h3>
+          <p class="about-text">
+            LocalGuide was founded with a simple mission: to help travelers and locals alike discover the hidden gems around them. We believe that every neighborhood, every city, and every region has unique experiences waiting to be discovered.
+          </p>
+          <p class="about-text">
+            Our platform uses advanced location technology to identify the best attractions, restaurants, museums, and more within a 5km radius of your current location, making exploration easy and accessible to everyone.
+          </p>
+          <p class="about-text">
+            Whether you're a tourist in a new city or looking to rediscover your hometown, LocalGuide is your companion for authentic, personalized experiences.
+          </p>
+        </div>
+        <div class="about-image">
+          <img src="images/team.jpg" alt="LocalGuide Team" class="team-image">
+        </div>
+      </div>
+
+      <div class="features-section">
+        <div class="feature-card">
+          <div class="feature-icon-container">
+            <i data-lucide="map-pin" class="feature-icon"></i>
+          </div>
+          <h3 class="feature-title">Location-Based</h3>
+          <p class="feature-description">Discover places within 5km of your current location for convenient exploration</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-container">
+            <i data-lucide="users" class="feature-icon"></i>
+          </div>
+          <h3 class="feature-title">Community-Driven</h3>
+          <p class="feature-description">Benefit from real reviews and recommendations from fellow travelers</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-container">
+            <i data-lucide="globe" class="feature-icon"></i>
+          </div>
+          <h3 class="feature-title">Global Coverage</h3>
+          <p class="feature-description">Access information about places of interest worldwide</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-container">
+            <i data-lucide="shield" class="feature-icon"></i>
+          </div>
+          <h3 class="feature-title">Privacy-Focused</h3>
+          <p class="feature-description">Your location data is only used to provide recommendations and never shared</p>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <h3 class="cta-title">Join Our Community</h3>
+        <p class="cta-description">
+          Become part of our growing community of explorers and contribute to making travel more accessible and enjoyable for everyone.
+        </p>
+        <a href="index.html" class="cta-button">Get Started</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/about.js"></script>
+  <script>
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

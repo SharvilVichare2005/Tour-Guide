@@ -1,0 +1,12 @@
+[build]
+  # Publish the `withdatabase` folder which contains your site files
+  publish = "withdatabase"
+  # No build command required for a plain static site
+  command = ""
+
+[[redirects]]
+  # Redirect all routes to home.html so client-side routing works (similar to your Express catch-all)
+  from = "/*"
+  to = "/home.html"
+  status = 200
+  force = true

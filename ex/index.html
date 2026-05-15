@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Map</title>
+    <!-- Tailwind CSS for basic page styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for the map container */
+        #map {
+            height: 600px; /* Set a fixed height for the map */
+            width: 100%; /* Make the map take full width of its container */
+            border-radius: 0.5rem; /* Rounded corners for the map */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        /* Ensure the body and html take full height for better layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: "Inter", sans-serif; /* Use Inter font */
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Center content using flexbox */
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure container takes full viewport height */
+            padding: 1rem; /* Add some padding around the content */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full">
+            <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Google Map Example</h1>
+            <!-- Div where the map will be rendered -->
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize and add the map
+        function initMap() {
+            // The location of London
+            const london = { lat: 51.505, lng: -0.09 };
+            // The map, centered at London
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 13, // Zoom level
+                center: london, // Center the map at London
+            });
+
+            // The marker, positioned at London
+            const marker = new google.maps.Marker({
+                position: london,
+                map: map,
+                title: "London", // Title for the marker
+            });
+
+            // Info window for the marker
+            const infoWindow = new google.maps.InfoWindow({
+                content: "<h3>London</h3><p>A beautiful city!</p>",
+            });
+
+            // Add a click listener to the marker to open the info window
+            marker.addListener("click", () => {
+                infoWindow.open(map, marker);
+            });
+
+            // Add a click listener to the map to get coordinates
+            map.addListener("click", (e) => {
+                const latLng = e.latLng;
+                const popup = new google.maps.InfoWindow({
+                    position: latLng,
+                    content: `You clicked at: ${latLng.lat().toFixed(4)}, ${latLng.lng().toFixed(4)}`,
+                });
+                popup.open(map);
+            });
+        }
+    </script>
+    <!-- Async script to load the Google Maps JavaScript API -->
+    <!-- Replace YOUR_API_KEY with your actual Google Maps API Key -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyByvZ_6ArXJwbZLBcC8qkShGFVDD_2UcGI&callback=initMap">
+    </script>
+</body>
+</html>

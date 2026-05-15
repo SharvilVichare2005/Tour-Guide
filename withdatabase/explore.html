@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalGuide - Explore</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/explore.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script> 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="/js/env.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-container">
+      <h1 class="logo">LocalGuide</h1>
+      <nav class="nav">
+        <a href="home.html" class="nav-link">Home</a>
+        <a href="explore.html" class="nav-link active">Explore</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+      <a href="index.html" class="login-link">
+        <button class="btn-logout">Logout</button>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="container">
+      <div class="hero">
+        <h2 class="hero-title">Explore India's Destinations</h2>
+        <p class="hero-description">
+          Discover amazing places across India from ancient temples to modern attractions
+        </p>
+      </div>
+
+      <div class="search-container">
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Search for a city, attraction, or restaurant..." class="search-input">
+          <button id="searchBtn" class="search-button">Search</button>
+        </div>
+      </div>
+
+      <div id="destinationsGrid" class="destinations-grid">
+        <!-- Destinations will be loaded by JavaScript -->
+      </div>
+    </section>
+  </main>
+  
+
+  <script type="module" src="js/explore.js"></script>
+  <script>
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
