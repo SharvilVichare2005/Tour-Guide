@@ -1,18 +1,35 @@
 {
-  "dependencies": {
-    "@supabase/supabase-js": "^2.49.4",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
-  },
-  "name": "mini-project-f",
+  "name": "localguide",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed-database.ts"
   },
-  "keywords": [],
-  "author": "shardul",
-  "license": "ISC",
-  "type": "module",
-  "description": ""
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "lucide-react": "^0.441.0",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.58.1",
+    "@types/node": "^20.16.5",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.11",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
 }
