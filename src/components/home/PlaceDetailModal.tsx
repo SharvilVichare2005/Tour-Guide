@@ -14,6 +14,7 @@ import {
 import { loadGoogleMaps } from "@/lib/google-maps";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import type { LatLng, Place } from "@/lib/types";
+import { ExternalLink } from "lucide-react";
 
 type Tab = "info" | "photos" | "map";
 
@@ -91,6 +92,99 @@ export function PlaceDetailModal({ place, onClose }: PlaceDetailModalProps) {
   }, [place]);
 
   if (!place) return null;
+
+  // Light variant for Google Places (no rich curated data).
+  if (place.source === "google") {
+    const mapsUrl = place.placeId
+      ? `https://www.google.com/maps/place/?q=place_id:${place.placeId}`
+      : `https://www.google.com/maps/search/?api=1&query=${place.location.lat},${place.location.lng}`;
+    return (
+      <div
+        id="place-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        onClick={onClose}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-cardLg"
+        >
+          <div className="relative h-48 flex-shrink-0 bg-secondary">
+            {place.googlePhotoUrl || place.image ? (
+              <img
+                src={place.googlePhotoUrl || place.image}
+                alt={place.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <MapPin className="h-10 w-10 text-[#ccc]" />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white">
+              via Google
+            </span>
+          </div>
+
+          <div className="overflow-y-auto p-4">
+            <div className="mb-3">
+              <h3 className="text-xl font-semibold text-[#333]">{place.name}</h3>
+              <div className="mt-1 flex items-center gap-2">
+                {place.rating > 0 && (
+                  <span className="inline-flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+                    <span className="font-semibold">{place.rating}</span>
+                  </span>
+                )}
+                <span className="text-sm capitalize text-[#999]">{place.category}</span>
+                {place.distance != null && (
+                  <span className="text-sm font-semibold text-primary">
+                    {place.distance.toFixed(1)} km away
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {place.vicinity && (
+              <div className="mb-4 flex items-start gap-2 text-sm text-[#666]">
+                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#999]" />
+                <span>{place.vicinity}</span>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleDirections}
+                className="flex-1 rounded-lg bg-primary-dark py-2.5 text-sm font-medium text-white transition hover:bg-[#3730a3]"
+              >
+                <Navigation className="mr-1 inline h-4 w-4" />
+                Get Directions
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open(mapsUrl, "_blank")}
+                className="flex-1 rounded-lg border border-black/10 bg-white py-2.5 text-sm font-medium text-primary transition hover:bg-secondary"
+              >
+                <ExternalLink className="mr-1 inline h-4 w-4" />
+                View on Google Maps
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   async function toggleSave() {
     if (!place) return;

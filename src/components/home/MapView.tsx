@@ -6,6 +6,8 @@ import {
   loadGoogleMaps,
   detectUserLocation,
   watchUserLocation,
+  saveLocation,
+  getSavedLocation,
   DEFAULT_LOCATION,
   type DetectedLocation,
 } from "@/lib/google-maps";
@@ -15,6 +17,7 @@ interface MapViewProps {
   places: Place[];
   directionTarget: LatLng | null;
   onSelectPlace: (place: Place) => void;
+  onUserLocation?: (location: LatLng) => void;
 }
 
 function createUserDotElement(): HTMLDivElement {
@@ -25,11 +28,12 @@ function createUserDotElement(): HTMLDivElement {
   return wrapper;
 }
 
-function createPlacePinElement(googleLib: typeof google): HTMLElement {
+function createPlacePinElement(googleLib: typeof google, source: "curated" | "google"): HTMLElement {
+  const isCurated = source === "curated";
   const pin = new googleLib.maps.marker.PinElement({
-    scale: 1.1,
-    background: "#5E4FE2",
-    borderColor: "#4A3ED1",
+    scale: isCurated ? 1.1 : 0.9,
+    background: isCurated ? "#5E4FE2" : "#4285F4",
+    borderColor: isCurated ? "#4A3ED1" : "#2A6FE6",
     glyphColor: "#ffffff",
   });
   return pin.element;
@@ -40,9 +44,10 @@ const SOURCE_LABELS: Record<DetectedLocation["source"], string> = {
   wifi: "Wi-Fi",
   "google-api": "Network",
   manual: "Manual",
+  saved: "Saved",
 };
 
-export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps) {
+export function MapView({ places, directionTarget, onSelectPlace, onUserLocation }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
@@ -52,6 +57,8 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
   const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const onSelectRef = useRef(onSelectPlace);
+  const onUserLocationRef = useRef(onUserLocation);
+  const sourceRef = useRef<DetectedLocation["source"] | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState(true);
@@ -66,6 +73,10 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
   useEffect(() => {
     onSelectRef.current = onSelectPlace;
   }, [onSelectPlace]);
+
+  useEffect(() => {
+    onUserLocationRef.current = onUserLocation;
+  }, [onUserLocation]);
 
   // Initialize map + detect user location automatically
   useEffect(() => {
@@ -86,14 +97,29 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
           fullscreenControl: false,
         });
 
+        // Mark the map ready immediately so it's visible while we locate the
+        // user (don't hide it behind the loading overlay during detection).
+        setStatus("ready");
+
+        // Restore a trusted saved location instantly so the map opens in the
+        // right place while we (possibly) seek a fresh, more accurate fix.
+        const saved = getSavedLocation();
+        if (saved && active) {
+          applyLocation(googleLib, saved, false);
+        }
+
         // Automatic detection — prompts the user for location permission once.
+        // detectUserLocation prefers a saved location over an inaccurate IP
+        // fix, so the wrong-city desktop case won't overwrite a trusted spot.
         try {
           const detected = await detectUserLocation();
           if (!active) return;
           applyLocation(googleLib, detected);
         } catch (err) {
           console.warn("Automatic location detection failed:", err);
-          setLocationError(formatLocationError(err));
+          if (!userLocationRef.current) {
+            setLocationError(formatLocationError(err));
+          }
           setLocating(false);
         }
 
@@ -101,11 +127,13 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
         stopWatch = watchUserLocation(
           (location, acc) => {
             if (!active) return;
-            // Don't let a low-accuracy IP watch fix overwrite a manually-set
-            // location. Only real GPS/Wi-Fi fixes (<1km) upgrade it.
+            // Don't let a low-accuracy IP watch fix overwrite a trusted
+            // saved or manually-set location. Only real GPS/Wi-Fi fixes
+            // (<1km) are allowed to upgrade it. Use sourceRef (not the stale
+            // state closure) so this reflects the current source.
             const isAccurate = acc > 0 && acc < 1000;
-            const isManual = source === "manual";
-            if (isManual && !isAccurate) return;
+            const isTrusted = sourceRef.current === "manual" || sourceRef.current === "saved";
+            if (isTrusted && !isAccurate) return;
 
             const isFirstFix = !userLocationRef.current;
             userLocationRef.current = location;
@@ -121,6 +149,7 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
             }
             setLocationError(null);
             setLocating(false);
+            onUserLocationRef.current?.(location);
           },
           (error) => {
             if (!active) return;
@@ -130,8 +159,6 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
             }
           },
         );
-
-        setStatus("ready");
       } catch (err) {
         console.error("Failed to load Google Maps:", err);
         setStatus("error");
@@ -144,11 +171,12 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
     };
   }, []);
 
-  function applyLocation(googleLib: typeof google, detected: DetectedLocation) {
+  function applyLocation(googleLib: typeof google, detected: DetectedLocation, persist = true) {
     userLocationRef.current = detected.location;
     setUserCoords(detected.location);
     setAccuracy(detected.accuracy);
     setSource(detected.source);
+    sourceRef.current = detected.source;
     setInaccurate(detected.inaccurate);
     mapRef.current?.setCenter(detected.location);
     mapRef.current?.setZoom(detected.inaccurate ? 12 : 15);
@@ -156,6 +184,8 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
     updateAccuracyCircle(googleLib, detected.location, detected.accuracy);
     setLocationError(null);
     setLocating(false);
+    onUserLocationRef.current?.(detected.location);
+    if (persist) saveLocation(detected);
   }
 
   function addUserMarker(googleLib: typeof google) {
@@ -200,7 +230,7 @@ export function MapView({ places, directionTarget, onSelectPlace }: MapViewProps
         position: place.location,
         map: mapRef.current,
         title: place.name,
-        content: createPlacePinElement(googleLib),
+        content: createPlacePinElement(googleLib, place.source ?? "curated"),
       });
       marker.addEventListener("click", () => onSelectRef.current(place));
       markersRef.current.push(marker);

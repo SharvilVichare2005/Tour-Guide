@@ -40,7 +40,7 @@ export const DEFAULT_LOCATION = { lat: 16.653957, lng: 74.262214 };
 export interface DetectedLocation {
   location: LatLng;
   accuracy: number;
-  source: "gps" | "wifi" | "google-api" | "manual";
+  source: "gps" | "wifi" | "google-api" | "manual" | "saved";
   /** True when the fix is IP-based and likely inaccurate (accuracy > 1km). */
   inaccurate: boolean;
 }
@@ -48,42 +48,112 @@ export interface DetectedLocation {
 /** Accuracy threshold (meters) above which a fix is considered IP-based/unreliable. */
 const INACCURATE_THRESHOLD = 1000;
 
+const SAVED_LOCATION_KEY = "localguide:saved-location";
+
+/** Read a previously-saved trusted location (manual or a good GPS/Wi-Fi fix). */
+export function getSavedLocation(): DetectedLocation | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SAVED_LOCATION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed?.location?.lat === "number" &&
+      typeof parsed?.location?.lng === "number"
+    ) {
+      return {
+        location: parsed.location,
+        accuracy: parsed.accuracy ?? 0,
+        source: "saved",
+        inaccurate: false,
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/** Persist a trusted location so it's reused on future visits automatically. */
+export function saveLocation(loc: DetectedLocation): void {
+  if (typeof window === "undefined") return;
+  // Never persist inaccurate IP fixes — they're often the wrong city.
+  if (loc.inaccurate) return;
+  try {
+    window.localStorage.setItem(
+      SAVED_LOCATION_KEY,
+      JSON.stringify({ location: loc.location, accuracy: loc.accuracy }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearSavedLocation(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(SAVED_LOCATION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * Automatic location detection for every user:
- * 1. Browser geolocation (GPS on mobile, Wi-Fi/IP on desktop) — the standard,
- *    automatic path that prompts the user for permission once.
- * 2. Google Maps Geolocation API (IP-based) — fallback if the browser denies
- *    or times out, so we still get an approximate location automatically.
- * Marks fixes with accuracy > 1km as `inaccurate` (IP-based) so the UI can warn
- * the user instead of silently showing a wrong location.
+ * 1. Saved trusted location (manual or prior good fix) — used instantly and
+ *    PREFERRED over inaccurate IP fixes that would otherwise show the wrong
+ *    city on desktops without GPS.
+ * 2. Browser geolocation — only an accurate fix (<1km) overrides the saved
+ *    location; an inaccurate IP fix is ignored if we already have a saved one.
+ * 3. Google Maps Geolocation API — IP fallback, only used if nothing saved.
+ * A real GPS/Wi-Fi fix always wins and gets persisted for next time.
  */
 export async function detectUserLocation(): Promise<DetectedLocation> {
-  // Layer 1: browser geolocation (works automatically once permission granted)
+  const saved = getSavedLocation();
+
+  // Layer 1: browser geolocation
   try {
     const pos = await getCurrentPosition();
     const acc = pos.coords.accuracy ?? 0;
     const location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    // GPS (<100m) or Wi-Fi (~100-500m) are trustworthy. Anything > 1km is
-    // IP-based and often the wrong city on desktops without location services.
     if (acc > 0 && acc < 100) {
-      return { location, accuracy: acc, source: "gps", inaccurate: false };
+      const detected = { location, accuracy: acc, source: "gps" as const, inaccurate: false };
+      saveLocation(detected);
+      return detected;
     }
     if (acc > 0 && acc < INACCURATE_THRESHOLD) {
-      return { location, accuracy: acc, source: "wifi", inaccurate: false };
+      const detected = { location, accuracy: acc, source: "wifi" as const, inaccurate: false };
+      saveLocation(detected);
+      return detected;
     }
-    // Low-accuracy IP fix — still return it so the map shows something, but
-    // flag it so the UI can warn the user it's approximate.
+    // Inaccurate IP fix — use it ONLY if we have no trusted saved location.
+    if (saved) {
+      console.info("Ignoring inaccurate IP fix; using saved location");
+      return saved;
+    }
     return { location, accuracy: acc, source: "wifi", inaccurate: true };
   } catch (browserErr) {
-    console.warn("Browser geolocation failed, trying Google Geolocation API:", browserErr);
+    console.warn("Browser geolocation failed:", browserErr);
   }
 
-  // Layer 2: Google Maps Geolocation API (IP-based automatic fallback)
-  try {
-    const result = await googleGeolocate();
-    return { ...result, source: "google-api", inaccurate: result.accuracy >= INACCURATE_THRESHOLD };
-  } catch (apiErr) {
-    console.warn("Google Maps Geolocation API failed:", apiErr);
+  // Layer 2: Google Maps Geolocation API (IP fallback) — only if nothing saved.
+  if (!saved) {
+    try {
+      const result = await googleGeolocate();
+      return {
+        ...result,
+        source: "google-api",
+        inaccurate: result.accuracy >= INACCURATE_THRESHOLD,
+      };
+    } catch (apiErr) {
+      console.warn("Google Maps Geolocation API failed:", apiErr);
+    }
+  }
+
+  // Layer 3: fall back to saved trusted location
+  if (saved) {
+    console.info("Using saved location from previous visit");
+    return saved;
   }
 
   throw new Error("All location detection methods failed");
@@ -108,14 +178,24 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
       reject(new Error("Geolocation not supported by this browser"));
       return;
     }
-    // Single high-accuracy request with a longer timeout. On mobile this gets
-    // a precise GPS fix; on desktop with Windows Location Services enabled +
-    // a Wi-Fi adapter it uses OS-level Wi-Fi positioning (accurate). If
-    // Windows Location Services is OFF, this either times out or returns a
-    // low-accuracy IP-based fix — detectUserLocation flags that case.
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
+    // Try high accuracy first (mobile GPS / desktop Wi-Fi). On desktops without
+    // GPS or Windows Location Services, the high-accuracy request often times
+    // out — fall back to a lenient low-accuracy request (IP-based) so we still
+    // get a fix. detectUserLocation flags inaccurate fixes and prefers a saved
+    // trusted location over them.
+    let settled = false;
+    const ok = (pos: GeolocationPosition) => {
+      if (!settled) { settled = true; resolve(pos); }
+    };
+    const failHigh = () => {
+      if (settled) return;
+      navigator.geolocation.getCurrentPosition(ok, (lowErr) => {
+        if (!settled) { settled = true; reject(lowErr); }
+      }, { enableHighAccuracy: false, timeout: 20000, maximumAge: 30000 });
+    };
+    navigator.geolocation.getCurrentPosition(ok, failHigh, {
       enableHighAccuracy: true,
-      timeout: 15000,
+      timeout: 8000,
       maximumAge: 0,
     });
   });
@@ -140,7 +220,7 @@ export function watchUserLocation(
       );
     },
     (error) => onError?.(error),
-    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 },
+    { enableHighAccuracy: false, timeout: 30000, maximumAge: 5000 },
   );
   return () => navigator.geolocation.clearWatch(watchId);
 }
