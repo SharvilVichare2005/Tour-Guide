@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Categories } from "@/components/home/Categories";
 import { NearbyPlaces } from "@/components/home/NearbyPlaces";
 import { MapView } from "@/components/home/MapView";
 import { PlaceDetailModal } from "@/components/home/PlaceDetailModal";
@@ -128,7 +127,6 @@ export function HomeClient({ places }: HomeClientProps) {
 
         <div className="grid gap-6 pb-12 lg:grid-cols-[360px_1fr]">
           <aside className="flex flex-col gap-6">
-            <Categories active={filter} onSelect={setFilter} />
             <NearbyPlaces
               places={displayPlaces}
               filter={filter}
